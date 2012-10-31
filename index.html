@@ -1,0 +1,159 @@
+<html>
+  <head>
+    <title>Bubble pop!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+    <script src="https://dl.dropbox.com/u/10630951/web-stuff/libs/Zepto/zepto.min.js"></script>
+    <script src="https://dl.dropbox.com/u/10630951/web-stuff/libs/CreateJS/EaselJS/easeljs-0.5.0.min.js"></script>
+    <script src="https://dl.dropbox.com/u/10630951/web-stuff/libs/CreateJS/SoundJS/soundjs-0.3.0.min.js"></script>
+<style>
+body
+{
+  background-color: #fff;
+  color: #666;
+  margin:0;
+  padding:0;
+  font-family:'Open Sans', Corbel;
+}
+#details
+{
+  display: none;
+}
+#canvas1
+{
+  background-color: #333;
+}
+#canvas1.hellyeah
+{
+  background-image: url(hell-yeah.jpg);
+}
+</style>
+<script>
+var canvas, stage;
+
+var mouseTarget;	// the display object currently under the mouse, or being dragged
+var dragStarted;	// indicates whether we are currently in a drag operation
+var offset;
+var update = true;
+
+var bubbles = 0;
+var visible_bubbles = 0;
+
+function init() {
+  /*if (window.top != window) {
+    document.getElementById("header").style.display = "none";
+  }*/
+  document.getElementById("loader").className = "loader";
+  // create stage and point it to the canvas:
+  canvas = document.getElementById("canvas1");
+  
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  //check to see if we are running in a browser with touch support
+  stage = new createjs.Stage(canvas);
+
+  // enable touch interactions if supported on the current device:
+  createjs.Touch.enable(stage);
+
+  // enabled mouse over / out events
+  stage.enableMouseOver(10);
+  stage.mouseMoveOutside = true; // keep tracking the mouse even when it leaves the canvas
+
+  // load the source image:
+  var bubble_blue = new Image();
+  bubble_blue.src = "bubble.png";
+  bubble_blue.onload = handleImageLoad;
+  
+  var bubble_pink = new Image();
+  bubble_pink.src = "bubble-pink.png";
+  bubble_pink.onload = handleImageLoad;
+  
+  var canvas_bg_hellyeah = new Image();
+  canvas_bg_hellyeah.src = "hell-yeah.jpg";
+  // canvas_bg_hellyeah.onload = handleImageLoad;
+}
+
+function stop() {
+  Ticker.removeListener(window);
+}
+
+function handleImageLoad(event) {
+  image = event.target;
+  var bitmap;
+  var container = new createjs.Container();
+  stage.addChild(container);
+
+  // create and populate the screen with random daisies:
+  for(var i = 0; i < 50; i++){
+    bitmap = new createjs.Bitmap(image);
+    // container.addChild(bitmap);
+    //container.addChildAt(bitmap, Math.floor(Math.random() * bubbles));
+
+    var newbubble = container.addChild(bitmap);
+    var oldbubble = container.getChildAt(Math.floor(Math.random() * bubbles));
+    container.swapChildren(newbubble, oldbubble);
+    
+    
+    bitmap.x = canvas.width * Math.random()|0;
+    bitmap.y = canvas.height * Math.random()|0;
+    bitmap.rotation = 360 * Math.random()|0;
+    bitmap.regX = bitmap.image.width/2|0;
+    bitmap.regY = bitmap.image.height/2|0;
+    bitmap.scaleX = bitmap.scaleY = bitmap.scale = Math.random()*0.6+0.6;
+    bitmap.name = "bmp_"+i;
+    bubbles ++;
+    visible_bubbles = bubbles;
+
+    // wrapper function to provide scope for the event handlers:
+    (function(target) {
+      bitmap.onMouseOver = function() {
+        target.scaleX = target.scaleY = target.scale*1.2;
+        update = true;
+      }
+      bitmap.onMouseOut = function() {
+        target.scaleX = target.scaleY = target.scale;
+        update = true;
+      }
+      bitmap.onClick = function() {
+        target.visible = false;
+        visible_bubbles --;
+        if (visible_bubbles <= 0) {
+          Zepto(function($){
+            $('#canvas1').addClass('hellyeah');
+          });
+          // alert('hell yeah!');
+        }
+        update = true;
+      }
+    })(bitmap);
+  }
+
+  document.getElementById("loader").className = "";
+  createjs.Ticker.addListener(window);
+}
+
+function tick() {
+  // this set makes it so the stage only re-renders when an event handler indicates a change has happened.
+  if (update) {
+    update = false; // only update once
+    stage.update();
+  }
+}
+
+Zepto(function($){
+  // TODO
+  // Toggle full screen mode
+  init();
+})
+</script>
+  </head>
+  <body>
+    <div id="loader"></div>
+    <div id="details">
+      <p>Bubble pop!</p>
+      <p>Version 1.0</p>
+    </div>
+    <canvas id="canvas1" width="640" height="480"></canvas>
+  </body>
+</html>
